@@ -1055,68 +1055,120 @@ void poke(word addr, word value) {
 // Прямое чтение из памяти
 word peek(word addr) {
     return *(word*)
+### ЧАСТЬ 13: ПРИМЕРЫ ПРОГРАММ
+13.1 "Hello, World!" графический
+c
+// hello.c - графическая версия Hello World
 
+#include "graphics.h"
 
-# Eng(English version)
+array screen[640x480];
 
+main() {
+    clear(screen);
+    put_string(screen, 200, 240, "Hello!", COLOR_WHITE);
+    display(screen);
+    
+    while (1) ;
+}
+13.2 Рисование мышью
+c
+// paint.c - простейший графический редактор
 
-# COMPLETE C+ LANGUAGE REFERENCE
-## Version 1.0 (1974)
+#include "graphics.h"
 
----
+array canvas[640x480];
+int drawing = 0;
+int last_x, last_y;
 
-## PART 1: GENERAL INFORMATION
+void on_mouse_down(int x, int y, int button) {
+    drawing = 1;
+    last_x = x;
+    last_y = y;
+    canvas[x,y] = 1;
+    display(canvas);
+}
 
-### 1.1 Language Philosophy
+void on_mouse_up(int x, int y, int button) {
+    drawing = 0;
+}
 
-C+ was created as a graphical extension of the C language. The main principles are:
+void on_mouse_move(int x, int y) {
+    if (drawing) {
+        draw_line(canvas, last_x, last_y, x, y, 1);
+        last_x = x;
+        last_y = y;
+        display(canvas);
+    }
+}
 
-| Principle | Description |
-|:--------|:---------|
-| **Direct access to the hardware** | Minimal abstraction between code and graphical hardware |
-| **Simplified graphics** | Syntax that is intuitive for working with pixels and the screen |
-| **Experimental types** | New data types for working with graphical objects |
-| **B legacy** | Preserving the simplicity and efficiency of the B/early C language |
+main() {
+    clear(canvas);
+    display(canvas);
+    
+    event_loop();
+}
+13.3 Анимация
+c
+// bounce.c - анимация прыгающего мячика
 
-### 1.2 Target platform
+#include "graphics.h"
 
-| Feature | Value |
-|:---------------|:---------|
-| **Processor** | 16-bit microprogrammable CPU |
-| **Memory** | 128-512 KB |
-| **Display** | 606 x 808 pixels (portrait mode), monochrome |
-| **Input devices** | Keyboard + three-button mouse |
-| **Network** | Ethernet |
+array fb[640x480];
 
----
+struct ball {
+    int x, y;
+    int dx, dy;
+    int r;
+};
 
-## PART 2: LEXIS AND SYNTAX
+struct ball b = {320, 240, 2, 1, 10};
 
-### 2.1 Character set
+void update_ball() {
+    draw_circle(fb, b.x, b.y, b.r, MODE_XOR);
+    
+    b.x += b.dx;
+    b.y += b.dy;
+    
+    if (b.x < b.r || b.x > 640 - b.r) {
+        b.dx = -b.dx;
+        beep();
+    }
+    if (b.y < b.r || b.y > 480 - b.r) {
+        b.dy = -b.dy;
+        beep();
+    }
+    
+    draw_circle(fb, b.x, b.y, b.r, MODE_SET);
+}
 
-```
-Letters:        A-Z a-z _
-Numbers:        0-9
-Special characters:  + - * / = ! < > & | ^ ^ % . , ; : ? ' " ( ) [ ] { } #
-Whitespace:   space, tab, newline
-```
+main() {
+    clear(fb);
+    
+    while (1) {
+        update_ball();
+        display(fb);
+        wait(20);
+    }
+}
+### ЧАСТЬ 14: ОТЛИЧИЯ C+ ОТ C
+Особенность	C	C+
+Массивы	int a[10][20];	array a[10x20];
+Доступ	a[i][j]	a[i,j]
+Графика	Нет	Встроенная
+Тип color	Нет	Есть
+Работа с мышью	Нет	Встроенная
+BitBLT	Нет	Есть
+Прямой доступ к видео	Через указатели	Спецсинтаксис @
+### ЧАСТЬ 15: ИТОГИ
+C+ (1974) — экспериментальное расширение языка C для графического программирования, предлагавшее:
 
-### 2.2 Keywords
+Упрощённый синтаксис для 2D-массивов
 
-```
-auto        array       bit        break       case        char
-clear       color       continue    default     display     do
-draw        else        fill        for         goto        if
-int         line        mouse       pixel       register    return
-short       sizeof      struct      switch      typedef     unsigned
-void        wait        while       word
-```
+Встроенные графические примитивы
 
-### 2.3 Comments
+Работу с мышью на уровне языка
 
-```c
-// Single-line comment
+Прямой доступ к видеопамяти
 
-/* Multiline
-   comment */
-    return *(word*)
+Экспериментальные типы данных
